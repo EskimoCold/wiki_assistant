@@ -67,7 +67,10 @@ def text_handler(message):
     else:
         question = message.text
 
-        bot.send_sticker(message.chat.id, work_sticker)
+        try:
+            bot.send_sticker(message.chat.id, work_sticker)
+        except:
+            pass
 
         print(f"question from {message.chat.id}: {question}")
 
