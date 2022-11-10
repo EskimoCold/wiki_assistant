@@ -1,3 +1,4 @@
+from time import time
 import warnings
 warnings.filterwarnings(action="ignore")
 
@@ -24,17 +25,9 @@ work_sticker = open('stickers/work.webp', 'rb')
 done_sticker = open('stickers/done.webp', 'rb')
 error_sticker = open('stickers/error.webp', 'rb')
 
-# load all neural networks
-qa_pipline = pipeline(task='question-answering',
-                        model='bert-large-uncased-whole-word-masking-finetuned-squad',
-                        tokenizer='bert-large-uncased-whole-word-masking-finetuned-squad')
-
-model = SentenceTransformer('cross-encoder/qnli-electra-base')
-
-kw_model = KeyBERT()
+qa_pipline, sentence_model, kw_model = load_all_neuralnetworks()
 
 db_manager.create_db() # create db if not exists
-
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
@@ -59,7 +52,7 @@ def inline(callback):
 @bot.message_handler(content_types=['text'])
 def text_handler(message):
     if message.text == "Help":
-        bot.send_message(message.chat.id, "To use the bot, just write him your question.\nIn the future, the question can be asked by voice.\n\nAfter the bot has responded, please leave your opinion about its work.")
+        bot.send_message(message.chat.id, "To use the bot, just write him your question or ask it by using your voice.\n\nAfter the bot has responded, please leave your opinion about its work.")
     
     elif message.text == "Github":
         bot.send_message(message.chat.id, "https://github.com/EskimoCold/wiki_assistant")
@@ -73,7 +66,7 @@ def text_handler(message):
             print(f"question from {message.chat.id}: {question}")
 
             try:
-                answer, url = question_to_answer(question, qa_pipline, model, kw_model)
+                answer, url = question_to_answer(question, qa_pipline, sentence_model, kw_model)
 
                 db_manager.save_q_and_a(question, answer, message.chat.id)
 
@@ -83,15 +76,66 @@ def text_handler(message):
                 if answer is None:
                     bot.send_sticker(message.chat.id, error_sticker)
                     bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
+                    
                 else:
                     bot.send_sticker(message.chat.id, done_sticker)
                     bot.send_message(message.chat.id, f"{answer}\n\nHere you can read all information: {url}")
                     bot.send_message(message.chat.id, "Are you satisfied with the answer?", reply_markup=survey_kb)
+                    
             except:
                 bot.send_sticker(message.chat.id, error_sticker)
                 bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
+                
         except:
             pass
+
+
+@bot.message_handler(content_types=['voice'])
+def voice_processing(message):
+    file_info = bot.get_file(message.voice.file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+    
+    with open(f'voice_msgs/{message.chat.id}_{int(time())}.ogg', 'wb') as new_file:
+        new_file.write(downloaded_file)
+        
+    name = f'voice_msgs/{message.chat.id}_{int(time())}.ogg'
+    transcription = get_large_audio_transcription(name)
+    
+    if transcription == 0:
+        bot.send_message(message.chat.id, 'Could\'t recognize your voice')
+        
+    else:
+        question = transcription[:-2]+'?'
+        bot.send_message(message.chat.id, f'Your voice was recognized as: {question}')
+        
+        try:
+            bot.send_sticker(message.chat.id, work_sticker)
+
+            print(f"question from {message.chat.id}: {question}")
+
+            try:
+                answer, url = question_to_answer(question, qa_pipline, sentence_model, kw_model)
+
+                db_manager.save_q_and_a(question, answer, message.chat.id)
+
+                print(f"answer on {message.chat.id}:{answer}")
+                print(f"url on {message.chat.id}:{url}")
+
+                if answer is None:
+                    bot.send_sticker(message.chat.id, error_sticker)
+                    bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
+                    
+                else:
+                    bot.send_sticker(message.chat.id, done_sticker)
+                    bot.send_message(message.chat.id, f"{answer}\n\nHere you can read all information: {url}")
+                    bot.send_message(message.chat.id, "Are you satisfied with the answer?", reply_markup=survey_kb)
+                    
+            except:
+                bot.send_sticker(message.chat.id, error_sticker)
+                bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
+                
+        except:
+            pass        
 
 
 if __name__ == "__main__":

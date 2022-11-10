@@ -1,11 +1,28 @@
+import os
+
 from scipy.spatial.distance import cosine
 import numpy as np
+from pydub import AudioSegment
+from pydub.silence import split_on_silence
+import speech_recognition as sr
 from transformers import pipeline
 from sentence_transformers import SentenceTransformer
 from keybert import KeyBERT
 
 from packages import parsers
 from packages import preprocessing
+
+
+def load_all_neuralnetworks():
+    qa_pipline = pipeline(task='question-answering',
+                            model='bert-large-uncased-whole-word-masking-finetuned-squad',
+                            tokenizer='bert-large-uncased-whole-word-masking-finetuned-squad')
+
+    sentence_model = SentenceTransformer('cross-encoder/qnli-electra-base')
+
+    kw_model = KeyBERT()
+    
+    return qa_pipline, sentence_model, kw_model
 
 
 def keywords_from_question(model, question:str, minkw:int=1, maxkw:int=3) -> list:
@@ -38,7 +55,7 @@ def get_most_similar_part(model, query:str, sentences:list) -> str:
     return best_part, best_index
 
 
-def question_to_answer(question, qa_pipline, model, kw_model, minkwlen=0):
+def question_to_answer(question:str, qa_pipline, model, kw_model, minkwlen:int=0):
     question_preprocessed = preprocessing.question_preprocessing(question)
 
     parsed = []
@@ -75,3 +92,37 @@ def question_to_answer(question, qa_pipline, model, kw_model, minkwlen=0):
     answer = get_answer_from_text(qa_pipline, question, best_part)
 
     return answer, best_url
+
+
+def get_large_audio_transcription(path:str) -> str:
+    r = sr.Recognizer()
+    sound = AudioSegment.from_ogg(path)  
+    
+    chunks = split_on_silence(sound,
+        min_silence_len = 500,
+        silence_thresh = sound.dBFS-14,
+        keep_silence=500,
+    )
+    
+    folder_name = "audio-chunks"
+    
+    if not os.path.isdir(folder_name):
+        os.mkdir(folder_name)
+        
+    whole_text = ""
+    for i, audio_chunk in enumerate(chunks, start=1):
+        chunk_filename = os.path.join(folder_name, f"chunk{i}.wav")
+        audio_chunk.export(chunk_filename, format="wav")
+        with sr.AudioFile(chunk_filename) as source:
+            audio_listened = r.record(source)
+            try:
+                text = r.recognize_google(audio_listened)
+                
+            except sr.UnknownValueError as e:
+                return 0
+            
+            else:
+                text = f"{text.capitalize()}. "
+                whole_text += text
+                
+    return whole_text
