@@ -59,7 +59,7 @@ def inline(callback):
 @bot.message_handler(content_types=['text'])
 def text_handler(message):
     if message.text == "Help":
-        bot.send_message(message.chat.id, "<help>")
+        bot.send_message(message.chat.id, "To use the bot, just write him your question.\nIn the future, the question can be asked by voice.\n\nAfter the bot has responded, please leave your opinion about its work.")
     
     elif message.text == "Github":
         bot.send_message(message.chat.id, "https://github.com/EskimoCold/wiki_assistant")
