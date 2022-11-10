@@ -65,33 +65,33 @@ def text_handler(message):
         bot.send_message(message.chat.id, "https://github.com/EskimoCold/wiki_assistant")
 
     else:
-        question = message.text
-
         try:
+            question = message.text
+
             bot.send_sticker(message.chat.id, work_sticker)
-        except:
-            pass
 
-        print(f"question from {message.chat.id}: {question}")
+            print(f"question from {message.chat.id}: {question}")
 
-        try:
-            answer, url = question_to_answer(question, qa_pipline, model, kw_model)
+            try:
+                answer, url = question_to_answer(question, qa_pipline, model, kw_model)
 
-            db_manager.save_q_and_a(question, answer, message.chat.id)
+                db_manager.save_q_and_a(question, answer, message.chat.id)
 
-            print(f"answer on {message.chat.id}:{answer}")
-            print(f"url on {message.chat.id}:{url}")
+                print(f"answer on {message.chat.id}:{answer}")
+                print(f"url on {message.chat.id}:{url}")
 
-            if answer is None:
+                if answer is None:
+                    bot.send_sticker(message.chat.id, error_sticker)
+                    bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
+                else:
+                    bot.send_sticker(message.chat.id, done_sticker)
+                    bot.send_message(message.chat.id, f"{answer}\n\nHere you can read all information: {url}")
+                    bot.send_message(message.chat.id, "Are you satisfied with the answer?", reply_markup=survey_kb)
+            except:
                 bot.send_sticker(message.chat.id, error_sticker)
                 bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
-            else:
-                bot.send_sticker(message.chat.id, done_sticker)
-                bot.send_message(message.chat.id, f"{answer}\n\nHere you can read all information: {url}")
-                bot.send_message(message.chat.id, "Are you satisfied with the answer?", reply_markup=survey_kb)
         except:
-            bot.send_sticker(message.chat.id, error_sticker)
-            bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
+            pass
 
 
 if __name__ == "__main__":
