@@ -9,3 +9,4 @@ transformers==4.24.0
 sentence-transformers==2.2.2
 keybert==0.7.0
 pytelegrambotapi==4.7.1
+argparse==1.4.0

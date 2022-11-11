@@ -3,13 +3,19 @@ import warnings
 warnings.filterwarnings(action="ignore")
 
 import telebot
+import argparse
 
 from packages import db_manager, messages
 from packages.networks import *
 import config
 
+# argparsing
+argparser = argparse.ArgumentParser(description='Wiki assistant')
+argparser.add_argument("--token", type=str, default=config.TOKEN)
+args = argparser.parse_args()
+TOKEN = args.token
 
-bot = telebot.TeleBot(config.TOKEN)
+bot = telebot.TeleBot(TOKEN)
 
 # setuping keyboards
 markup = telebot.types.ReplyKeyboardMarkup(row_width=2)
