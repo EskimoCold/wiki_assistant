@@ -1,0 +1,11 @@
+spacy==3.4.2
+beautifulsoup4==4.6.3
+wikipedia==1.4.0
+scipy==1.7.3
+numpy==1.21.6
+pydub==0.25.1
+speechrecognition==3.8.1
+transformers==4.24.0
+sentence-transformers==2.2.2
+keybert==0.7.0
+pytelegrambotapi==4.7.1

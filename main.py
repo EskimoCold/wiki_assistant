@@ -4,12 +4,14 @@ warnings.filterwarnings(action="ignore")
 
 import telebot
 
-from packages import db_manager
+from packages import db_manager, messages
 from packages.networks import *
 import config
 
+
 bot = telebot.TeleBot(config.TOKEN)
 
+# setuping keyboards
 markup = telebot.types.ReplyKeyboardMarkup(row_width=2)
 help_button = telebot.types.KeyboardButton("Help")
 report_button = telebot.types.KeyboardButton("Github")
@@ -20,19 +22,21 @@ yes_button = telebot.types.InlineKeyboardButton(text="Yes", callback_data="Yes")
 no_button = telebot.types.InlineKeyboardButton(text="No", callback_data="No")
 survey_kb.add(yes_button, no_button)
 
+# loading stickers
 hello_sticker = open('stickers/hello.webp', 'rb')
 work_sticker = open('stickers/work.webp', 'rb')
 done_sticker = open('stickers/done.webp', 'rb')
 error_sticker = open('stickers/error.webp', 'rb')
 
+# loading nn + creating database
 qa_pipline, sentence_model, kw_model = load_all_neuralnetworks()
+db_manager.create_db()
 
-db_manager.create_db() # create db if not exists
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
     bot.send_sticker(message.chat.id, hello_sticker)
-    bot.send_message(message.chat.id, 'Hi, my name is wiki_assistant_bot and I\'ll answer your questions!', reply_markup=markup)
+    bot.send_message(message.chat.id, messages.bot_messages["greeting"], reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda callback: True)
@@ -46,16 +50,16 @@ def inline(callback):
 
     if satisfied is not None:
         db_manager.update_satisfied(callback.message.chat.id, satisfied)
-        bot.send_message(callback.message.chat.id, "Thank you, It was noted on your last question!")
+        bot.send_message(callback.message.chat.id, messages.bot_messages["callback"])
 
 
 @bot.message_handler(content_types=['text'])
 def text_handler(message):
     if message.text == "Help":
-        bot.send_message(message.chat.id, "To use the bot, just write him your question or ask it by using your voice.\n\nAfter the bot has responded, please leave your opinion about its work.")
+        bot.send_message(message.chat.id, messages.bot_messages["help"])
     
     elif message.text == "Github":
-        bot.send_message(message.chat.id, "https://github.com/EskimoCold/wiki_assistant")
+        bot.send_message(message.chat.id, messages.bot_messages["github"])
 
     else:
         try:
@@ -75,16 +79,16 @@ def text_handler(message):
 
                 if answer is None:
                     bot.send_sticker(message.chat.id, error_sticker)
-                    bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
+                    bot.send_message(message.chat.id, messages.bot_messages["error"])
                     
                 else:
                     bot.send_sticker(message.chat.id, done_sticker)
                     bot.send_message(message.chat.id, f"{answer}\n\nHere you can read all information: {url}")
-                    bot.send_message(message.chat.id, "Are you satisfied with the answer?", reply_markup=survey_kb)
+                    bot.send_message(message.chat.id, messages.bot_messages["survey"], reply_markup=survey_kb)
                     
             except:
                 bot.send_sticker(message.chat.id, error_sticker)
-                bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
+                bot.send_message(message.chat.id, messages.bot_messages["error"])
                 
         except:
             pass
@@ -102,7 +106,7 @@ def voice_processing(message):
     transcription = get_large_audio_transcription(name)
     
     if transcription == 0:
-        bot.send_message(message.chat.id, 'Could\'t recognize your voice')
+        bot.send_message(message.chat.id, messages.bot_messages["not_recognized"])
         
     else:
         question = transcription[:-2]+'?'
@@ -123,16 +127,16 @@ def voice_processing(message):
 
                 if answer is None:
                     bot.send_sticker(message.chat.id, error_sticker)
-                    bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
+                    bot.send_message(message.chat.id, messages.bot_messages["error"])
                     
                 else:
                     bot.send_sticker(message.chat.id, done_sticker)
                     bot.send_message(message.chat.id, f"{answer}\n\nHere you can read all information: {url}")
-                    bot.send_message(message.chat.id, "Are you satisfied with the answer?", reply_markup=survey_kb)
+                    bot.send_message(message.chat.id, messages.bot_messages["survey"], reply_markup=survey_kb)
                     
             except:
                 bot.send_sticker(message.chat.id, error_sticker)
-                bot.send_message(message.chat.id, "Sorry, I can\'t answer your question(")
+                bot.send_message(message.chat.id, messages.bot_messages["error"])
                 
         except:
             pass        
