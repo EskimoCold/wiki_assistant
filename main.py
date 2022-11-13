@@ -18,7 +18,7 @@ TOKEN = args.token
 bot = telebot.TeleBot(TOKEN)
 
 # setuping keyboards
-markup = telebot.types.ReplyKeyboardMarkup(row_width=2)
+markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
 help_button = telebot.types.KeyboardButton("Help")
 report_button = telebot.types.KeyboardButton("Github")
 markup.add(help_button, report_button)
@@ -28,20 +28,17 @@ yes_button = telebot.types.InlineKeyboardButton(text="Yes", callback_data="Yes")
 no_button = telebot.types.InlineKeyboardButton(text="No", callback_data="No")
 survey_kb.add(yes_button, no_button)
 
-# loading stickers
-hello_sticker = open('stickers/hello.webp', 'rb')
-work_sticker = open('stickers/work.webp', 'rb')
-done_sticker = open('stickers/done.webp', 'rb')
-error_sticker = open('stickers/error.webp', 'rb')
-
 # loading nn + creating database
 qa_pipline, sentence_model, kw_model = load_all_neuralnetworks()
 db_manager.create_db()
 
+if not os.path.exists("voice_msgs"):
+    os.mkdir("voice_msgs")
+
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
-    bot.send_sticker(message.chat.id, hello_sticker)
+    bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAOkY26AqvRhVAf-GJmh5f-zqa64tkcAAm83AALpVQUYRePim7upqHQrBA")
     bot.send_message(message.chat.id, messages.bot_messages["greeting"], reply_markup=markup)
 
 
@@ -71,7 +68,7 @@ def text_handler(message):
         try:
             question = message.text
 
-            bot.send_sticker(message.chat.id, work_sticker)
+            bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAOiY26AgW2FjyArKkq9OwU2uqjymSYAAoI3AALpVQUYL-ts6UKMyeorBA")
 
             print(f"question from {message.chat.id}: {question}")
 
@@ -84,16 +81,16 @@ def text_handler(message):
                 print(f"url on {message.chat.id}:{url}")
 
                 if answer is None:
-                    bot.send_sticker(message.chat.id, error_sticker)
+                    bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAOgY26AS3xKGGUa4Gc8hW_W7aRgfQ4AAnA3AALpVQUYH28VcdzDf3MrBA")
                     bot.send_message(message.chat.id, messages.bot_messages["error"])
                     
                 else:
-                    bot.send_sticker(message.chat.id, done_sticker)
+                    bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAOeY25_oN1YabWRusm36lpROykLMyIAAow3AALpVQUYI0cmZPnyzQ8rBA")
                     bot.send_message(message.chat.id, f"{answer}\n\nHere you can read all information: {url}")
                     bot.send_message(message.chat.id, messages.bot_messages["survey"], reply_markup=survey_kb)
                     
             except:
-                bot.send_sticker(message.chat.id, error_sticker)
+                bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAOgY26AS3xKGGUa4Gc8hW_W7aRgfQ4AAnA3AALpVQUYH28VcdzDf3MrBA")
                 bot.send_message(message.chat.id, messages.bot_messages["error"])
                 
         except:
@@ -119,7 +116,7 @@ def voice_processing(message):
         bot.send_message(message.chat.id, f'Your voice was recognized as: {question}')
         
         try:
-            bot.send_sticker(message.chat.id, work_sticker)
+            bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAOiY26AgW2FjyArKkq9OwU2uqjymSYAAoI3AALpVQUYL-ts6UKMyeorBA")
 
             print(f"question from {message.chat.id}: {question}")
 
@@ -132,16 +129,16 @@ def voice_processing(message):
                 print(f"url on {message.chat.id}:{url}")
 
                 if answer is None:
-                    bot.send_sticker(message.chat.id, error_sticker)
+                    bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAOgY26AS3xKGGUa4Gc8hW_W7aRgfQ4AAnA3AALpVQUYH28VcdzDf3MrBA")
                     bot.send_message(message.chat.id, messages.bot_messages["error"])
                     
                 else:
-                    bot.send_sticker(message.chat.id, done_sticker)
+                    bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAOeY25_oN1YabWRusm36lpROykLMyIAAow3AALpVQUYI0cmZPnyzQ8rBA")
                     bot.send_message(message.chat.id, f"{answer}\n\nHere you can read all information: {url}")
                     bot.send_message(message.chat.id, messages.bot_messages["survey"], reply_markup=survey_kb)
                     
             except:
-                bot.send_sticker(message.chat.id, error_sticker)
+                bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAOgY26AS3xKGGUa4Gc8hW_W7aRgfQ4AAnA3AALpVQUYH28VcdzDf3MrBA")
                 bot.send_message(message.chat.id, messages.bot_messages["error"])
                 
         except:
